@@ -16,13 +16,13 @@ hello: hello.o
 	$(CC) -static -o hello hello.o
 
 run-hello: hello
-	$(QEMU_USER) hello
+	@$(QEMU_USER) hello
 
 hello2: hello2.o
 	$(CC) -static -o hello2 hello2.o
 
 run-hello2: hello2
-	$(QEMU_USER) hello2
+	@$(QEMU_USER) hello2
 
 main: main.o
 	$(CC) -static -o main main.o
