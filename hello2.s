@@ -47,7 +47,7 @@ main:
 	sw	a5,-20(s0)
 	lw	a5,-20(s0)
 	mv	a0,a5
-	call	foo
+	call	foo@plt
 	li	a5,0
 	mv	a0,a5
 	ld	ra,40(sp)
@@ -55,4 +55,5 @@ main:
 	addi	sp,sp,48
 	jr	ra
 	.size	main, .-main
-	.ident	"GCC: (Debian 8.3.0-4) 8.3.0"
+	.ident	"GCC: (Debian 10.2.0-3) 10.2.0"
+	.section	.note.GNU-stack,"",@progbits

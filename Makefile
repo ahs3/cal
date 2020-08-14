@@ -5,10 +5,10 @@ QEMU_USER = qemu-riscv64
 
 CAL_OBJ = cal.o
 
-all: cal
-
 cal: $(CAL_OBJ)
 	$(CC) -static -o cal $(CAL_OBJ)
+
+all: cal examples
 
 examples: hello hello2 main
 

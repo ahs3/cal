@@ -26,4 +26,5 @@ main:
 	addi	sp,sp,32
 	jr	ra
 	.size	main, .-main
-	.ident	"GCC: (Debian 8.3.0-4) 8.3.0"
+	.ident	"GCC: (Debian 10.2.0-3) 10.2.0"
+	.section	.note.GNU-stack,"",@progbits
