@@ -39,6 +39,9 @@ main3: main3.o
 main4: main4.o
 	$(CC) -static -o main4 main4.o
 
+dow: dow.c
+	gcc -o dow dow.c
+
 clean:
 	rm -f hello hello.o
 	rm -f hello2 hello2.o
@@ -46,6 +49,7 @@ clean:
 	rm -f main2 main2.o
 	rm -f main3 main3.o
 	rm -f main4 main4.o
+	rm -f dow.o
 	rm -f cal $(CAL_OBJ)
 
 %.s: %.c
