@@ -27,5 +27,5 @@ int main(int argc, char *argv[])
 	dow = k + ((13*m-1) / 5) + d + (d / 4) + (c / 4) - (2 * c);
 	dow = dow < 0 ? (dow % (-7)) + 7 : dow % 7;
 
-	printf ("%4d-%02d-%02d : %s\n", year, month, day, dowstr[dow]);
+	printf ("%4d-%02d-%02d : %s (%d)\n", year, month, day, dowstr[dow], dow);
 }

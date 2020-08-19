@@ -26,14 +26,31 @@
 	.section	.rodata
 	.align	3
 
-ARGS:	.string "month/year: %d/%d\n"
-NARGS:	.string "? %d is not enough arguments\n"
+ARGS:		.string "month/year: %d/%d\n"
+DOW:		.string "day of week: %s (%d)\n"
+NARGS:		.string "? %d is not enough arguments\n"
 NINT_MONTH:	.string "? not an integer month: %s\n"
 NINT_YEAR:	.string "? not an integer year: %s\n"
 
-# --- functions ----------------------------------------------
+KVAL:		.string "k = %d\n"
+MVAL:		.string "m = %d\n"
+DVAL:		.string "d = %d\n"
+CVAL:		.string "c = %d\n"
+DBGDOW:		.string "[%d]%d "
+DBGEND:		.string "\n"
+
+DOW0:		.string "sun"
+DOW1:		.string "mon"
+DOW2:		.string "tue"
+DOW3:		.string "wed"
+DOW4:		.string "thu"
+DOW5:		.string "fri"
+DOW6:		.string "sat"
+
+# --- functions -----------------------------------------------------
 	.text
 	.align	1
+#--------------------------------------------------------------------
 #
 #	convert a string
 #
@@ -72,7 +89,107 @@ ATOI_EXIT:
 	ld	s0,32(sp)
 	addi	sp,sp,48
 	jr	ra
+#--------------------------------------------------------------------
+#
+#	find day of the week via Zeller's Rule
+#
+	.global	dow
+	.type	dow, @function
+dow:
+	addi	sp,sp,-48		# function prologue
+	sd	ra,40(sp)
+	sd	s0,32(sp)
+#
+	sd	a0,-32(s0)		# save the month
+	sd	a1,-40(s0)		# save the day (k)
+	sd	a2,-48(s0)		# save the year
 
+	ld	a1,-40(s0)		# debug: print k
+	lla	a0,KVAL
+	call	printf@plt
+
+	ld	s2,-32(s0)		# get the month
+	li	s3,2
+	sub	s2,s2,s3		# March is the first month, this time
+	bgt	s2,x0,doyear
+	addi	s2,s2,12		# so Jan,Feb are 11,12
+
+#
+doyear:	
+	sd	s2,-32(s0)		# save it for now (m)
+
+	mv	a1,s2			# debug: print m
+	lla	a0,MVAL
+	call	printf@plt
+
+	ld	s3,-48(s0)		# get the year
+	li	s4,100
+	rem	s3,s3,s4		# mod 100
+	ld	s2,-32(s0)		# get the month
+	li	s4,2
+	sub	s2,s2,s4		# March is the first month, this time
+	bgt	s2,x0,docent
+	li	s4,1
+	sub	s3,s3,s4
+
+docent:
+	sd	s3,-24(s0)		# save it for now (d)
+
+	ld	a1,-24(s0)		# debug: print d
+	lla	a0,DVAL
+	call	printf@plt
+
+	ld	s4,-48(s0)		# get the year
+	li	s5,100
+	div	s4,s4,s5		# y / 100 (yes, div)
+	sd	s4,-16(s0)		# save it for now (c)
+
+	ld	a1,-16(s0)		# debug: print c
+	lla	a0,CVAL
+	call	printf@plt
+
+#
+#	bring it all together
+#	dow = k + ((13*m-1) / 5) + d + (d / 4) + (c / 4) - (2 * c)
+#
+	ld	s7,-40(s0)		# retrieve the day = k
+	ld	s5,-32(s0)		# retrieve the adjusted month
+	li	s6,0xd
+	mul	s5,s5,s6		# m*13
+	li	s6,1
+	neg	s6,s6
+	add	s5,s5,s6		# (13*m-1)
+	li	s6,5
+	div	s5,s5,s6		# ((13*m-1) / 5)
+	add	s7,s7,s5		# k + ((13*m-1) / 5)
+	ld	s5,-24(s0)
+	add	s7,s7,s5		# k + ((13*m-1) / 5) + d
+	ld	s5,-24(s0)
+	srli	s5,s5,2
+	add	s7,s7,s5		# k + ((13*m-1)/5) + d + (d/4)
+	ld	s5,-16(s0)		# c
+	srli	s5,s5,2
+	add	s7,s7,s5		# k + ((13*m-1)/5) + d + (d/4) + (c/4)
+	ld	s5,-16(s0)		# c
+	slli	s5,s5,1
+	neg	s5,s5			# -(2*c)
+	add	s7,s7,s5		# k+((13*m-1)/5)+d+(d/4)+(c/4)-(2*c)
+	blt	s7,x0,dow7a
+
+	li	s6,7
+	rem	s7,s7,s6
+	j	dwdone
+
+dow7a:	li	s6,-7
+	rem	s7,s7,s7
+	addi	s7,s7,7
+#
+dwdone:	mv	a0,s7
+	ld	ra,40(sp)		# function epilogue
+	ld	s0,32(sp)
+	addi	sp,sp,48
+	jr	ra
+#--------------------------------------------------------------------
 #
 #	main program
 #
@@ -117,7 +234,27 @@ main:
 	ld	a1,-32(s0)
 	lla	a0,ARGS
 	call	printf@plt
-	j	EXIT
+#
+#	figure out which day of the week the 1st is
+#
+	ld	a0,-32(s0)		# month is the first arg
+	li	a1,1			# always the first of the month
+	ld	a2,-24(s0)		# year is the third arg
+	call	dow
+	sd	a0,-16(s0)		# save the day of week, sun == 0
+
+	ld	a2,-16(s0)
+	ld	a6,-16(s0)		# get DOW string address for a1
+	slli	a6,a6,2
+	lla	a7,DOW0
+	add	a1,a7,a6
+	lla	a0,DOW
+	call	printf@plt		# print some debug info
+
+	lla	a0,BUF
+	call	printf@plt		
+
+	j	EXIT			# all done
 #
 #	not an integer month
 #
