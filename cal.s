@@ -41,6 +41,7 @@ DBG:		.string "[%d] %d\n"
 DOWS:		.string "sun","mon","tue","wed","thu","fri","sat"
 MONS:		.string "Jan","Feb","Mar","Apr","May","Jun"
 MONS2:		.string "Jul","Aug","Sep","Oct","Nov","Dec"
+MDAYS:		.byte	31,28,31,30,31,30,31,31,30,31,30,31
 
 MONHDR:		.string "      %3s %s\n"
 WKHDR:		.string "Su Mo Tu We Th Fr Sa\n"
@@ -59,37 +60,6 @@ BUF:		.quad	0,0,0
 # --- functions -----------------------------------------------------
 	.text
 	.align	1
-#--------------------------------------------------------------------
-#
-#	initialize a buffer
-#
-	.global	bset
-	.type	bset, @function
-bset:
-	addi	sp,sp,-48		# function prologue
-	sd	ra,40(sp)
-	sd	s0,32(sp)
-	addi	s0,sp,48
-
-	mv	t1,a0			# address of buffer
-	mv	t2,a1			# length in bytes
-	mv	t3,a2			# value to use (bottom byte)
-	li	t4,0
-	mv	t5,a1
-loopi:
-	add	t1,t1,t4
-	bge	t4,t5,loopd
-	sb	t3,(t1)
-	addi	t4,t4,1
-	j	loopi
-	
-loopd:
-	mv	a0,t4
-	ld	ra,40(sp)		# function epilogue
-	ld	s0,32(sp)
-	addi	sp,sp,48
-	jr	ra
-
 #--------------------------------------------------------------------
 #
 #	convert a string
@@ -292,13 +262,6 @@ main:
 	lla	a0,DOW
 	call	printf@plt		# print some debug info
 
-	la	a2,BLANK
-	lb	a2,0(a2)
-	la	a1,BUFLEN
-	lb	a1,0(a1)
-	lla	a0,BUF
-	call	bset
-
 	ld	t0,-48(s0)		# load &argv
 	ld	t0,16(t0)		# load &argv[2]
 	mv	a2,t0			# ptr to year string
@@ -327,17 +290,40 @@ mloop1:
 	lla	a0,NUMS
 	call	printf@plt		
 
+	li	a5,7			# days per week
+
+	ld	t0,-40(s0)
+	addi	t0,t0,-1
+	lla	t1,MDAYS
+	add	t0,t0,t1
+	lb	s6,0(t0)		# number of days in month
+	ld	t0,-40(s0)		# but is it a leap year?
+	addi	t0,t0,-2
+	bne	t0,x0,nlyear
+	ld	t0,-32(s0)		# divisible by 4?
+	li	t1,4
+	rem	t0,t0,t1
+	bne	t0,x0,nlyear
+	ld	t0,-32(s0)		# divisible by 100?
+	li	t1,0x64
+	rem	t0,t0,t1
+	bne	t0,x0,lyear
+	ld	t0,-32(s0)		# divisible by 400?
+	li	t1,0x190
+	rem	t0,t0,t1
+	beq	t0,x0,nlyear
+lyear:
+	addi	s6,s6,1			# feb in leap year
+
+nlyear:
 	li	a4,1			# day-of-month counter
-	sd	a4,-32(s0)
-	li	a5,7
-	li	a6,0x1f
+	sd	a4,-32(s0)		# re-use the space for numeric year
 
 mloop2:
 	ld	a4,-32(s0)		# day-of-month counter
 	addi	a4,a4,1
 	sd	a4,-32(s0)
-	li	a6,0x1f
-	bgt	a4,a6,mloop5
+	bgt	a4,s6,mloop5
 	ld	a3,-24(s0)		# day-of-week counter
 	addi	a3,a3,1
 	sd	a3,-24(s0)
