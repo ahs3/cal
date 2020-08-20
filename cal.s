@@ -118,9 +118,11 @@ dow:
 	sd	a1,-64(s0)		# save the day (k)
 	sd	a0,-56(s0)		# save the month
 
-	ld	a1,-64(s0)		# debug: print k
-	lla	a0,KVAL
-	call	printf@plt
+# -- DEBUG --------------------------------------
+#	ld	a1,-64(s0)		# debug: print k
+#	lla	a0,KVAL
+#	call	printf@plt
+# -- DEBUG --------------------------------------
 
 	ld	a3,-56(s0)		# get the month
 	addi	a3,a3,-2		# March is the first month, this time
@@ -131,9 +133,11 @@ dow:
 doyear:	
 	sd	a3,-48(s0)		# save it for now (adjusted m)
 
-	mv	a1,a3			# debug: print m
-	lla	a0,MVAL
-	call	printf@plt
+# -- DEBUG --------------------------------------
+#	mv	a1,a3			# debug: print m
+#	lla	a0,MVAL
+#	call	printf@plt
+# -- DEBUG --------------------------------------
 
 	ld	a3,-72(s0)		# get the year
 	li	a4,0x64
@@ -146,18 +150,22 @@ doyear:
 docent:
 	sd	a3,-40(s0)		# save it for now (d)
 
-	ld	a1,-40(s0)		# debug: print d
-	lla	a0,DVAL
-	call	printf@plt
+# -- DEBUG --------------------------------------
+#	ld	a1,-40(s0)		# debug: print d
+#	lla	a0,DVAL
+#	call	printf@plt
+# -- DEBUG --------------------------------------
 
 	ld	a3,-72(s0)		# get the year
 	li	a4,100
 	div	a3,a3,a4		# y / 100 (yes, div)
 	sd	a3,-32(s0)		# save it for now (c)
 
-	ld	a1,-32(s0)		# debug: print c
-	lla	a0,CVAL
-	call	printf@plt
+# -- DEBUG --------------------------------------
+#	ld	a1,-32(s0)		# debug: print c
+#	lla	a0,CVAL
+#	call	printf@plt
+# -- DEBUG --------------------------------------
 
 #
 #	bring it all together
@@ -241,10 +249,12 @@ main:
 #
 #	now we know what we need to look up
 #
-	ld	a2,-32(s0)
-	ld	a1,-40(s0)
-	lla	a0,ARGS
-	call	printf@plt
+# -- DEBUG --------------------------------------
+#	ld	a2,-32(s0)
+#	ld	a1,-40(s0)
+#	lla	a0,ARGS
+#	call	printf@plt
+# -- DEBUG --------------------------------------
 #
 #	figure out which day of the week the 1st is
 #
@@ -254,13 +264,15 @@ main:
 	call	dow
 	sd	a0,-24(s0)		# save the day of week, sun == 0
 
-	ld	a2,-24(s0)
-	ld	a6,-24(s0)		# get DOW string address for a1
-	slli	a6,a6,2
-	lla	a7,DOWS
-	add	a1,a7,a6
-	lla	a0,DOW
-	call	printf@plt		# print some debug info
+# -- DEBUG --------------------------------------
+#	ld	a2,-24(s0)
+#	ld	a6,-24(s0)		# get DOW string address for a1
+#	slli	a6,a6,2
+#	lla	a7,DOWS
+#	add	a1,a7,a6
+#	lla	a0,DOW
+#	call	printf@plt		# print some debug info
+# -- DEBUG --------------------------------------
 
 	ld	t0,-48(s0)		# load &argv
 	ld	t0,16(t0)		# load &argv[2]
