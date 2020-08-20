@@ -114,48 +114,48 @@ dow:
 	sd	s0,64(sp)
 	addi	s0,sp,80
 #
-	sd	a2,-64(s0)		# save the year
-	sd	a1,-56(s0)		# save the day (k)
-	sd	a0,-48(s0)		# save the month
+	sd	a2,-72(s0)		# save the year
+	sd	a1,-64(s0)		# save the day (k)
+	sd	a0,-56(s0)		# save the month
 
-	ld	a1,-56(s0)		# debug: print k
+	ld	a1,-64(s0)		# debug: print k
 	lla	a0,KVAL
 	call	printf@plt
 
-	ld	a3,-48(s0)		# get the month
+	ld	a3,-56(s0)		# get the month
 	addi	a3,a3,-2		# March is the first month, this time
 	bgt	a3,x0,doyear
 	addi	a3,a3,12		# so Jan,Feb are 11,12
 
 #
 doyear:	
-	sd	a3,-40(s0)		# save it for now (adjusted m)
+	sd	a3,-48(s0)		# save it for now (adjusted m)
 
 	mv	a1,a3			# debug: print m
 	lla	a0,MVAL
 	call	printf@plt
 
-	ld	a3,-64(s0)		# get the year
+	ld	a3,-72(s0)		# get the year
 	li	a4,0x64
 	rem	a3,a3,a4		# mod 100
-	ld	a4,-48(s0)		# get the month
-	addi	a5,a5,-2		# March is the first month, this time
-	bgt	a5,x0,docent
+	ld	a4,-56(s0)		# get the month
+	addi	a4,a4,-2		# March is the first month, this time
+	bgt	a4,x0,docent
 	addi	a3,a3,-1
 
 docent:
-	sd	a3,-32(s0)		# save it for now (d)
+	sd	a3,-40(s0)		# save it for now (d)
 
-	ld	a1,-32(s0)		# debug: print d
+	ld	a1,-40(s0)		# debug: print d
 	lla	a0,DVAL
 	call	printf@plt
 
-	ld	a3,-64(s0)		# get the year
+	ld	a3,-72(s0)		# get the year
 	li	a4,100
 	div	a3,a3,a4		# y / 100 (yes, div)
-	sd	a3,-24(s0)		# save it for now (c)
+	sd	a3,-32(s0)		# save it for now (c)
 
-	ld	a1,-24(s0)		# debug: print c
+	ld	a1,-32(s0)		# debug: print c
 	lla	a0,CVAL
 	call	printf@plt
 
@@ -163,23 +163,23 @@ docent:
 #	bring it all together
 #	dow = k + ((13*m-1) / 5) + d + (d / 4) + (c / 4) - (2 * c)
 #
-	ld	a7,-56(s0)		# retrieve the day = k
-	ld	a5,-40(s0)		# retrieve the adjusted month
+	ld	a7,-64(s0)		# retrieve the day = k
+	ld	a5,-48(s0)		# retrieve the adjusted month
 	li	a6,0xd
 	mul	a5,a5,a6		# m*13
 	addi	a5,a5,-1		# (13*m-1)
 	li	a6,5
 	div	a5,a5,a6		# ((13*m-1) / 5)
 	add	a7,a7,a5		# k + ((13*m-1) / 5)
-	ld	a5,-32(s0)
+	ld	a5,-40(s0)
 	add	a7,a7,a5		# k + ((13*m-1) / 5) + d
-	ld	a5,-32(s0)
+	ld	a5,-40(s0)
 	srli	a5,a5,2
 	add	a7,a7,a5		# k + ((13*m-1)/5) + d + (d/4)
-	ld	a5,-24(s0)		# c
+	ld	a5,-32(s0)		# c
 	srli	a5,a5,2
 	add	a7,a7,a5		# k + ((13*m-1)/5) + d + (d/4) + (c/4)
-	ld	a5,-24(s0)		# c
+	ld	a5,-32(s0)		# c
 	slli	a5,a5,1
 	neg	a5,a5			# -(2*c)
 	add	a7,a7,a5		# k+((13*m-1)/5)+d+(d/4)+(c/4)-(2*c)
